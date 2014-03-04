@@ -65,24 +65,28 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             this.items.onCollectionChange(function (elements) {
                 var id;
 
+                // check to see if there is any element on the new collection
                 if (!elements.length) {
                     return;
                 }
 
+                // change the element format if grouping is selected
                 if (isGroupingNeeded) {
                     elements = formatedGroup(elements);
                 }
 
+                // Initialize select2 with new data
                 self.$selectNode.select2({
                     width: 'element',
                     data: elements
                 });
 
+                // Synchronize the selected element in combobox and in the collection
                 id = self.items().ID;
                 self.$selectNode.select2("val", id);
             });
 
-            // update our combobox upon selecting a record
+            // update our combobox upon selecting a record on collection
             if (this.items()) {
                 subscriber = this.items().subscribe('currentElementChange', function () {
                     var id = self.items().ID;
