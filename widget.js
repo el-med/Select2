@@ -1,4 +1,4 @@
-/*global WAF, $ */
+/*global WAF, $, ds */
 
 'use strict';
 
@@ -6,22 +6,22 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
 
     var Select2 = widget.create('Select2', {
 
+        value: widget.property({
+            defaultValue: '',
+            bindable : true
+        }),
+
         items: widget.property({
             type: 'datasource',
             attributes: [{
                 name: 'id' // Option key
             }, {
                 name: 'text' // Option displayed text
-            }, {
-                name: 'group' // Option parent group
             }]
         }),
 
         init: function () {
-
-            var self = this,
-                subscriber,
-                isGroupingNeeded = !!this.items.attributeFor('group');
+            var self = this;
 
             this.node.innerHTML = '<input />';
             this.$selectNode = $('input', this.node);
@@ -32,47 +32,15 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 width: '100%'
             });
 
-            // ****** Events 
-            // Propagate select2 events to waf listeners
-            this.$selectNode.on({
-                "change": function (e) {
-                    subscriber.pause();
-                    self.items().selectByKey(e.val);
-                    subscriber.resume();
-                    self.fire("change", e.data);
-                },
-                "select2-opening": function (e) {
-                    self.fire('opening', e.data);
-                },
-                "select2-open": function (e) {
-                    self.fire('open', e.data);
-                },
-                "select2-highlight": function (e) {
-                    self.fire('highlight', e.data);
-                },
-                "select2-selecting": function (e) {
-                    self.fire('selecting', e.data);
-                },
-                "select2-focus": function (e) {
-                    self.fire('focus', e.data);
-                },
-                "select2-blur": function (e) {
-                    self.fire('blur', e.data);
-                }
-            });
-
-            // Propagate event source event to select2 plugin
+            // If the collection of the datasource items change, the elements in the DropDownMenu change accordingly.
             this.items.onCollectionChange(function (elements) {
-                var id;
+                var currentValue;
 
-                // check to see if there is any element on the new collection
+                currentValue = this.value();
+
+                // Check to see if there is any element on the new collection
                 if (!elements.length) {
                     return;
-                }
-
-                // change the element format if grouping is selected
-                if (isGroupingNeeded) {
-                    elements = formatedGroup(elements);
                 }
 
                 // Initialize select2 with new data
@@ -81,77 +49,46 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                     data: elements
                 });
 
-                // Synchronize the selected element in combobox and in the collection
-                id = self.items().ID;
-                self.$selectNode.select2("val", id);
+                // Initialize the combobox with the current value
+                if (currentValue) {
+                    this.$selectNode.select2("val", currentValue);
+                }
             });
 
-            // update our combobox upon selecting a record on collection
-            if (this.items()) {
-                subscriber = this.items().subscribe('currentElementChange', function () {
-                    var id = self.items().ID;
-                    if (id) {
-                        self.$selectNode.select2("val", id);
+            // If the value of the attribute countryCode of the datasource person1 change, 
+            // the selected element in the DropDownMenu change
+            this.value.onChange(function () {
+                var currentValue, key, dataClass;
+
+                currentValue = this.value();
+                key = this.items.attributeFor('id');
+                dataClass = this.items().getClassTitle();
+                ds[dataClass].find(key + ' LIKE ' + currentValue, {
+                    'onSuccess': function (e) {
+                        if (e.entity) {
+                            self.$selectNode.select2("val", currentValue);
+                        } else {
+                            //@TODO: if no element match the value of the attribute, the widget should raise an error
+                            return;
+                        }
                     }
                 });
-            }
+            });
 
-            function formatedGroup(elements) {
-                var i, len = elements.length, group, groups = [], index;
-                for (i = 0; i < len; i += 1) {
-                    group = elements[i].group;
-
-                    index = indexOfGroup(groups, group);
-
-
-                    if (index !== -1) {
-                        groups[index].children.push({
-                            id: elements[i].id,
-                            text: elements[i].text,
-                        });
+            // When the user select another item in the DropDownMenu, the value of the attribute "id" of 
+            // the selected item is copied to the attribute value of the datasource value.
+            this.$selectNode.on({
+                "change": function (e) {
+                    var bindedValue = self.boundAttributes.value;
+                    if (bindedValue) {
+                        bindedValue.datasource[bindedValue.attribute] = this.value;
+                        bindedValue.datasource.save();
+                        self.fire("change", e.data);
                     } else {
-                        groups.push({
-                            text: group,
-                            children: [{
-                                id: elements[i].id,
-                                text: elements[i].text,
-                            }]
-                        });
+                        self.value(this.value);
                     }
                 }
-                return groups;
-            }
-
-            function indexOfGroup(groups, group) {
-                var j, max = groups.length;
-                for (j = 0; j < max; j += 1) {
-                    if (groups[j].text == group) {
-                        return j;
-                    }
-                }
-                return -1;
-            }
-        },
-
-        // expose select2 API
-        open: function () {
-            this.$selectNode.select2('open');
-        },
-
-        close: function () {
-            this.$selectNode.select2('close');
-        },
-
-        enable: function () {
-            this.$selectNode.select2("enable", true);
-        },
-
-        disable: function () {
-            this.$selectNode.select2("enable", false);
-        },
-
-        selectedData: function () {
-            return this.$selectNode.select2('data');
+            });
         }
     });
 
