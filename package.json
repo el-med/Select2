@@ -19,8 +19,8 @@
     "license": "MIT",
     "loadDependencies": [
         {"id": "Widget_V2"},       
-        {"id": "Select2/bower_components/select2/select2.css", "path": "WIDGETS_CUSTOM"},
-        {"id": "Select2/bower_components/select2/select2.js", "path": "WIDGETS_CUSTOM"},
+        {"id": "Select2/lib/select2.css", "path": "WIDGETS_CUSTOM"},
+        {"id": "Select2/lib/select2.js", "path": "WIDGETS_CUSTOM"},
         {"id": "Select2/widget.js", "version": "1.0.0", "path": "WIDGETS_CUSTOM"},
         {"id": "Select2/css/widget.css", "version": "1.0.0", "path": "WIDGETS_CUSTOM"},
         {"id": "Select2/designer.js", "studioOnly": true, "version": "1.0.0", "path": "WIDGETS_CUSTOM"}
