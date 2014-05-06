@@ -41,6 +41,7 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
 
             if (window.designer) {
                 this.$selectNode.select2("enable", false);
+                $(this.node).append('<div class="selectableInStudio"></div>');
             } else {
                 this.main();
             }
