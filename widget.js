@@ -1,4 +1,4 @@
-/*global WAF, $, ds, sources, window */
+/*global WAF, $, ds, sources */
 
 'use strict';
 
@@ -41,20 +41,16 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
 
             if (window.designer) {
                 this.$selectNode.select2("enable", false);
+                $(this.node).append('<div class="selectableInStudio"></div>');
             } else {
                 this.main();
             }
         },
 
-        main: function () {
-            var self = this,
-                isRelated,
-                dc,
-                re,
-                relatedDC,
-                kind,
+        main : function () {
+            var self = this, isRelated, dc, re, relatedDC, kind,
                 id = self.items.attributeFor('id'),
-                val = self.value.boundDatasource();
+                val = this.value.boundDatasource();
 
             if (val) {
                 dc = val.datasource.getID();
@@ -65,6 +61,7 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 } else {
                     kind = '';
                 }
+
             }
 
             if (kind === "relatedEntity") {
@@ -74,10 +71,9 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             }
 
 
-            // If the collection of the datasource items change, 
+            // If the collection of the datasource items change,
             // the elements in the DropDownMenu change accordingly.
-            // this.items.onCollectionChange(function (elements) {
-            self.items.onPageChange(function (elements) {
+            this.items.onCollectionChange(function (elements) {
 
                 // Check to see if there is any element on the new collection
                 if (!elements.length) {
@@ -96,13 +92,13 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 }
             });
 
-            // When the current element of the related datasource "company" is changed, 
-            // 1. the selected element of the DropDownMenu change 
-            // 2. the value of the related attribute "employee.company" is changed too.
+
+            // When the current element of the related datasource "company1" is changed,
+            // 1. the selected element of the DropDownMenu change
+            // 2. the value of the related attribute "employee1.company" is changed too.
             if (isRelated) {
-                if (self.items()) {
-                    //this.items().subscribe('currentElementChange', function (event) {
-                    self.items.subscribe('currentElementChange', function (event) {
+                if (this.items()) {
+                    this.items().subscribe('currentElementChange', function (event) {
 
                         var currentEntity = event.data.dataSource.getCurrentElement();
                         if (currentEntity) {
@@ -117,15 +113,15 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             }
 
 
-            // When the related attribute "employee.company" is changed, 
-            // 1. then the chosen element in the DropDownMenu is changed, 
-            // 2. the current element of the related datasource "company" is changed too.            
-            self.value.onChange(function (newVal) {
+            // When the related attribute "employee1.company" is changed,
+            // 1. then the chosen element in the DropDownMenu is changed,
+            // 2. the current element of the related datasource "company" is changed too.
+            this.value.onChange(function (newVal) {
                 if (isRelated) {
                     onValueChangeRelated(newVal);
                 } else {
                     onValueChangeSimple();
-                }                
+                }
             });
 
             function onValueChangeRelated(newVal) {
@@ -155,13 +151,12 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 } else {
                     query = key + ' LIKE "' + currentValue + '"';
                 }
-                
+
                 ds[dataClass].find(query, {
                     'onSuccess': function (e) {
                         if (e.entity) {
                             self.$selectNode.select2("val", currentValue);
                         } else {
-                            // show empty option if no value is matched
                             self.$selectNode.select2("val", null);
                             return;
                         }
@@ -169,7 +164,7 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 });
             }
 
-            self.$selectNode.on({
+            this.$selectNode.on({
                 "change": function (e) {
                     if (isRelated) {
                         onSelectNodeRelated(e);
@@ -180,8 +175,8 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             });
 
             // When the user select another item in the DropDownMenu
-            // 1.  the related attribute employee.company is set to the corresponding company item
-            // 2.  the current element of the related datasource "company" is changed to this item
+            // 1.  the related attribute employee1.company is set to the corresponding company item
+            // 2.  the current element of the related datasource "company1" is changed to this item
             function onSelectNodeRelated(e) {
                 ds[relatedDC].query(id + ' = :1', {
                     onSuccess: function (event) {
@@ -195,13 +190,15 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 });
             }
 
-            // When the user select another item in the DropDownMenu, the value of the attribute "id" of 
-            // the selected item is copied to the attribute value of the datasource value.            
+            // When the user select another item in the DropDownMenu, the value of the attribute "id" of
+            // the selected item is copied to the attribute value of the datasource value.
             function onSelectNodeSimple(e) {
-                if (val) {
-                    val.datasource[val.attribute] = e.val;
+                var bindedValue = self.value.boundDatasource();
+                if (bindedValue) {
+                    bindedValue.datasource[bindedValue.attribute] = e.val;
+
                     if (self.autoSave()) {
-                        val.datasource.save();
+                        bindedValue.datasource.save();
                     }
                 } else {
                     self.value(e.val);
