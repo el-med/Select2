@@ -29,7 +29,7 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             }
         }),
 
-        init: function () {
+        init: function () {                       
             this.node.innerHTML = '<input />';
             this.$selectNode = $('input', this.node);
 
@@ -61,7 +61,7 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 } else {
                     kind = '';
                 }
-
+                
             }
 
             if (kind === "relatedEntity") {
@@ -71,9 +71,9 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             }
 
 
-            // If the collection of the datasource items change,
+            // If the collection of the datasource items change, 
             // the elements in the DropDownMenu change accordingly.
-            this.items.onCollectionChange(function (elements) {
+            this.items.onPageChange(function (elements) {
 
                 // Check to see if there is any element on the new collection
                 if (!elements.length) {
@@ -93,8 +93,8 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             });
 
 
-            // When the current element of the related datasource "company1" is changed,
-            // 1. the selected element of the DropDownMenu change
+            // When the current element of the related datasource "company1" is changed, 
+            // 1. the selected element of the DropDownMenu change 
             // 2. the value of the related attribute "employee1.company" is changed too.
             if (isRelated) {
                 if (this.items()) {
@@ -113,15 +113,15 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
             }
 
 
-            // When the related attribute "employee1.company" is changed,
-            // 1. then the chosen element in the DropDownMenu is changed,
-            // 2. the current element of the related datasource "company" is changed too.
+            // When the related attribute "employee1.company" is changed, 
+            // 1. then the chosen element in the DropDownMenu is changed, 
+            // 2. the current element of the related datasource "company" is changed too.            
             this.value.onChange(function (newVal) {
                 if (isRelated) {
                     onValueChangeRelated(newVal);
                 } else {
                     onValueChangeSimple();
-                }
+                }                
             });
 
             function onValueChangeRelated(newVal) {
@@ -190,15 +190,20 @@ WAF.define('Select2', ['waf-core/widget'], function (widget) {
                 });
             }
 
-            // When the user select another item in the DropDownMenu, the value of the attribute "id" of
-            // the selected item is copied to the attribute value of the datasource value.
+            // When the user select another item in the DropDownMenu, the value of the attribute "id" of 
+            // the selected item is copied to the attribute value of the datasource value.            
             function onSelectNodeSimple(e) {
                 var bindedValue = self.value.boundDatasource();
                 if (bindedValue) {
-                    bindedValue.datasource[bindedValue.attribute] = e.val;
-
-                    if (self.autoSave()) {
-                        bindedValue.datasource.save();
+                    if (bindedValue.datasource.getDataClass() instanceof WAF.DataClass) {
+                        bindedValue.datasource[bindedValue.attribute] = e.val;
+                    
+                        if (self.autoSave()) {
+                            bindedValue.datasource.save();
+                        }
+                    } else {
+                        window[bindedValue.attribute] = e.val;
+                        sources[bindedValue.attribute].sync();
                     }
                 } else {
                     self.value(e.val);
